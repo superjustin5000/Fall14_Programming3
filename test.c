@@ -4,8 +4,6 @@
 
  for fahr = 0, 20, ..., 300 */
 
-////edited by Justin Fletcher
-
  main()
 
  {
