@@ -1,0 +1,77 @@
+Locking and unlocking threads:
+	lock()
+		----- critical section
+			// i/o is expensive
+			// errors cause lock to never unlock.
+			// keep code as small as possible.
+
+	unlock()
+
+
+Producer - Consumer Problem
+	Producers send data to buffer
+	Consumers read data from buffer.
+
+	buffer is shared.
+
+	how to synchronize the data?
+		mutex? (mutex = mutual exclusion)
+
+		int x
+		mutex m
+
+		-producer
+			while (1) { ///keep reading input from keyboard and put it in buffer (x)
+				v = getintfromkeyboard() 
+				lock(&m)
+				x = v
+				unlock(&m)
+			}
+
+		-consumer
+			////keep trying to take the integer from buffer (x)
+
+			while(1) {
+				lock(&m)
+				v = x
+				unlock(&m)
+
+				printf(%c, v)
+
+			}
+
+		above code won't work as expected. since consumer doesnt know if theres a new value of x, and producer might run too fast since printf is expensive.
+
+
+		create int flag.
+			when its 0 no new value, 1 is new value.
+
+		-inside lock of producer.
+			if flag == 0
+				overwrite x
+				flag = 1
+
+			or a while loop in the lock() that unlocks and relocks if the flag is 1. thus waiting for flag to be 0.
+
+		-in lock of consumer.
+			while flag is 0.. keep looping lock and unlock.. other wise.. it's 1 (new) so print it.
+
+		//while the logic of while loops is correct. it causes a lot of wasting time and work for the thread. cpu keeps running instructions. (POLLING / SPINNING).
+
+		SOLUTION - A CONDITIONAL VARIABLE (a notification for thread).
+
+Condition Variable
+	add variables
+		cond flagTurnsZero, flagTurnsOne
+
+	while(flag == 1)	
+		pthread_cond_wait(&flagTurnsZero, &m) gets put inside lock
+
+	after setting flag to 1.
+		pthread_cond_signal(&flagTurnsOne)
+
+
+	while(flag == 0)
+		pthread_cond_wait(&flagTurnsOne, &m)
+
+	pthread_cond_signal(&flagTurnsZero) after outputing variable.
